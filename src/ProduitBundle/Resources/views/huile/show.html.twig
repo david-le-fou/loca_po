@@ -1,0 +1,345 @@
+{% extends 'base.html.twig' %}
+
+{% block titre_page %} <strong class="text-primary">Fiche Huile</strong> {% endblock %}
+{% block titre_description %}Information sur la référence d'huile{% endblock %}
+{% block body %}
+
+    {% set stockDepot = 0 %}
+    {% set stockSite = 0 %}
+
+    {% for depot in depots %}
+        {% if depot|stockByDepot(huile) != '-' %}
+            {% set stockDepot = stockDepot + (depot|stockByDepot(huile)) %}
+        {% endif %}
+    {% endfor %}
+
+    {% for site in listeSiteStockages %}
+        {% if site|stockBySite(huile) != '-' %}
+            {% set stockSite = stockSite + (site|stockBySite(huile)) %}
+        {% endif %}
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="box">
+
+                <div class="box-header with-border">
+                    <h3 class="box-title"><i class="fa fa-slack"></i> Fiche Information Produit</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <ul class="list-inline">
+                                {% if is_granted('ROLE_HUILE') %}
+                                    <li>
+                                        <a href="{{ path('huile_edit', {'id' : huile.id}) }}" class="btn btn-info btn-lg"><i class="fa fa-edit"></i> Modifier</a>
+                                    </li>
+                                    {% if not huile.huileParDefaut %}
+                                        <li>
+                                            <a href="{{ path('huile_parDefaut', {'id' : huile.id}) }}" class="btn btn-warning btn-lg"><i class="fa fa-check"> Huile par defaut</i></a>
+                                        </li>
+                                    {% endif %}
+                                    <li>
+                                        <a href="#"></a>
+                                    </li>
+                                {% endif %}
+
+                            </ul>
+                        </div>
+
+                    </div>
+
+                    <div >
+                        <table class="table table-striped">
+                            <tbody>
+                            <tr>
+                                <th>Designation</th>
+                                <td>{{ huile.designation }}</td>
+                            </tr>
+                            <tr>
+                                <th>Code</th>
+                                <td>{{ huile.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>Prixachat</th>
+                                <td>{{ huile.prixAchat|number_format(2, ',', ' ') }}</td>
+                            </tr>
+                            <tr>
+                                <th><i class="fa fa-exchange"></i> Stock en Dépôt</th>
+                                <td class="text-right">
+                                    {% if stockDepot <= 0 %}
+                                        -
+                                    {% else %}
+                                        <b>{{ stockDepot }}</b>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><i class="fa fa-exchange"></i> Stock sur site</th>
+                                <td class="text-right">
+                                    {% if stockSite <= 0 %}
+                                        -
+                                    {% else %}
+                                        <b>{{ stockSite }}</b>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Alert</th>
+                                <td>{{ huile.alert }}</td>
+                            </tr>
+                            {% if huile.note %}
+                                <tr>
+                                    <td colspan="2"><b>Note: </b> <strong style="white-space: pre">                </strong>{{ huile.note|nl2br }}</td>
+                                </tr>
+                            {% endif %}
+
+
+                            </tbody>
+                        </table>
+                        {% if huile.huileParDefaut %}
+                            <p class="text-warning">Cette huile est l'huile par défaut pour les vidanges</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="box">
+
+                <div class="box-header with-border">
+                    <h3 class="box-title"><i class="fa fa-slack"></i> Répartition du stock du produit</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <h4 class="text-primary">Répartition dans les dépôts:</h4>
+                    <table class="table table-striped">
+                        <tbody>
+                        {% for depot in depots %}
+                            <tr>
+                                <th><a href="{{ path('produit_historiqueParDepot', {'id' : huile.id, 'id3' : depot.id}) }}"><i class="fa fa-info-circle"></i> {{ depot.abrv }}</a></th>
+                                <td class="text-right">{{ depot|stockByDepot(huile) }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <hr>
+                    <h4 class="text-primary">Répartition sur les sites:</h4>
+                    <table class="table table-striped">
+                        <tbody>
+                        {% for listeSite in listeSiteStockages %}
+                            <tr>
+                                <th>
+                                    <a href="{{ path('produit_historiqueParSite', {'id' : huile.id, 'id2' : listeSite.id}) }}">{{ listeSite.emplacement }} <i class="fa fa-info-circle"></i></a></th>
+                                <td class="text-right">{{ listeSite|stockBySite(huile) }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-9">
+                <div class="box">
+
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-list-ol"></i> Historique du produit</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                        <table class="table table-striped" id="tableHistorique">
+                            <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Libellé</th>
+                                <th>Emplacement</th>
+                                <th>Entrée</th>
+                                <th>Sortie</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            {% set solde = 0 %}
+
+                            {% for historiqueProduit in huile.historiqueProduits %}
+
+                                {#-----------ENTRE et DEPLACEMET----------#}
+                                {% if historiqueProduit.type == 'credit' %}
+
+                                    {% set solde = solde + historiqueProduit.quantite %}
+
+                                    {% if historiqueProduit.entre %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>Bon d'entrée: N° <a href="{{ path('entre_affcher', {'id' : historiqueProduit.entre.id}) }}" target="_blank">{{ historiqueProduit.entre.numero }}</a></td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="text-center success" >{{ historiqueProduit.quantite }}</td>
+                                            <td class="success"></td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.deplacement %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Transfert de produit(s): N° <a href="{{ path('deplacement_affcher', {'id' : historiqueProduit.deplacement.id}) }}" target="_blank">{{ historiqueProduit.deplacement.numero }}</a></td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="text-center success">{{ historiqueProduit.quantite }}</td>
+                                            <td class="success"></td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.bonExpedition %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Bon d'expédition: N° <a href="{{ path('bonExpedition_show', {'id' : historiqueProduit.bonExpedition.id}) }}" target="_blank">{{ historiqueProduit.bonExpedition.numero }}</a></td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="text-center success">{{ historiqueProduit.quantite }}</td>
+                                            <td class="success"></td>
+                                        </tr>
+                                    {% endif %}
+                                {% endif %}
+
+
+                                {#-----------SORTIE et DEPLACEMET----------#}
+                                {% if historiqueProduit.type == 'debit' %}
+
+                                    {% set solde = solde - historiqueProduit.quantite %}
+
+                                    {% if historiqueProduit.sortie %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Bon de sortie: N° <a href="{{ path('sortie_afficher', {'id' : historiqueProduit.sortie.id}) }}" target="_blank">{{ historiqueProduit.sortie.numero }}</a>
+                                            </td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.deplacement %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Transfert de produit(s): N° <a href="{{ path('deplacement_affcher', {'id' : historiqueProduit.deplacement.id}) }}" target="_blank">{{ historiqueProduit.deplacement.numero }}</a></td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.vidange %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Vigange du groupe {{ historiqueProduit.vidange.groupe.numero }}</td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.appoint %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Appoint d'huile du groupe {{ historiqueProduit.appoint.groupe.numero }}</td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.bonExpedition %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Bon d'expedition': N° <a href="{{ path('bonExpedition_show', {'id' : historiqueProduit.bonExpedition.id }) }}" target="_blank">{{ historiqueProduit.bonExpedition.numero }}</a></td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if historiqueProduit.appoint %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Vigange du groupe {{ historiqueProduit.appoint.groupe.numero }}
+                                            </td>
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+
+                                    {% if historiqueProduit.remplacementPiece %}
+                                        <tr>
+                                            <td>{{ historiqueProduit.date|date('d/m/Y') }}</td>
+                                            <td>
+                                                Remplacement pièce sur site du groupe {{ historiqueProduit.remplacementPiece.groupe.numero }}
+                                                {% if historiqueProduit.remplacementPiece.vidange %}
+                                                    <a href="{{ path('vidange_show', {'id' : historiqueProduit.remplacementPiece.vidange.id}) }}" target="_blank">(Vidange)</a>
+                                                {% endif %}
+                                            <td>{{ historiqueProduit|emplacementHist }}</td>
+                                            <td class="danger"></td>
+                                            <td class="danger text-center">{{ historiqueProduit.quantite }}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endif %}
+
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- DataTables JS -->
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet"  href="{{ asset('AdminLTE/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+
+    <script>
+        $(document).ready(function() {
+            $('#tableHistorique').DataTable({
+                scrollY: 350,
+                paging: false,
+                bSort: false,
+                language: {
+                    processing:     "Traitement en cours...",
+                    search:         "Rechercher&nbsp;:",
+                    lengthMenu:    "Afficher _MENU_ &eacute;l&eacute;ments",
+                    info:           "Affichage de l'&eacute;lement _START_ &agrave; _END_ sur _TOTAL_ &eacute;l&eacute;ments",
+                    infoEmpty:      "Affichage de l'&eacute;lement 0 &agrave; 0 sur 0 &eacute;l&eacute;ments",
+                    infoFiltered:   "(filtr&eacute; de _MAX_ &eacute;l&eacute;ments au total)",
+                    infoPostFix:    "",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords:    "Aucun &eacute;l&eacute;ment &agrave; afficher",
+                    emptyTable:     "Aucune donnée disponible dans le tableau",
+                    paginate: {
+                        first:      "Premier",
+                        previous:   "Pr&eacute;c&eacute;dent",
+                        next:       "Suivant",
+                        last:       "Dernier"
+                    },
+                    aria: {
+                        sortAscending:  ": activer pour trier la colonne par ordre croissant",
+                        sortDescending: ": activer pour trier la colonne par ordre décroissant"
+                    }
+                },
+                scrollCollapse: true,
+                fixedColumns:   {
+                    leftColumns: 1,
+                    rightColumns: 1
+                },
+                fixedHeader: true
+            });
+        } );
+    </script>
+
+{% endblock %}

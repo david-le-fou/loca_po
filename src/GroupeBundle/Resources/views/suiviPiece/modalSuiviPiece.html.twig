@@ -1,0 +1,100 @@
+<div class="modal fade" id="modalSuiviPiece">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ path('suivi_piece_new', {'id' : groupe.id}) }}" method="post">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title text-warning">Suivi pièce détachée</h4>
+                </div>
+                <div class="modal-body">
+
+                    <div class="form-group">
+                        <label for="dateSuivi">Date: <b class="text-danger" id="err_dateSuivi"></b></label>
+                        <input required type="text" class="form-control" name="dateSuivi" id="dateSuivi"  />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="libelleSuivi">Libéllé: <b class="text-danger" id="err_libelleSuivi"></b></label>
+                        <input required type="text" class="form-control" name="libelleSuivi" id="libelleSuivi"  />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="typePiece">Type du pièce: <b class="text-danger" id="err_typePiece"></b></label>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <select required  class="form-control" name="typePiece" id="typePiece" >
+                                    <option value=""></option>
+                                    {% for listePiece in listePieces %}
+                                        <option value="{{ listePiece.id }}">{{ listePiece.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="checkbox" id="chk_sortieEnStockSuivi" name="chk_sortieEnStockSuivi" data-toggle="collapse" data-target="#divSortieEnStockSuivi">
+                        <label for="chk_sortieEnStockSuivi" class="text-danger">Sortie en stock</label>
+                    </div>
+
+                    <div id="divSortieEnStockSuivi" class="collapse">
+                        <div class="panel panel-default">
+                            <div class="panel-body">Sortie en stock sur site du produit</div>
+                            <div class="panel-footer">
+                                <div class="form-group">
+                                    <label for="suivi_produit">Produit: </label>
+                                    <select  id="suivi_produit" name="suivi_produit" class="form-control" >
+                                        <option value=""></option>
+                                        {% for produitSuivi in stockProduits %}
+                                            <option value="{{ produitSuivi.produit.id }}">
+                                                {{ produitSuivi.produit.designation }} - {{ produitSuivi.produit.code }} | {{ produitSuivi.produit.reference }} <b>({{ produitSuivi.quantite }})</b>
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="suivi_quantite">Quantité produit sélectionné: </label>
+                                    <input type="number" id="suivi_quantite" name="suivi_quantite" class="form-control only_float"  required>
+                                </div>
+
+                                <p class="text-danger">NB: L'action' ne sera plus modifiable <br>
+                                    et aurra des répercution sur le stock du site
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descriptionSuivi">Note/Description: <b class="text-danger" id="err_descriptionSuivi"></b></label>
+                        <textarea rows="4" class="form-control" name="descriptionSuivi" id="descriptionSuivi" ></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning" > Enregistrer</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Anuller</button>
+                </div>
+            </form>
+
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<script>
+    //Date picker
+    $('#dateSuivi').datepicker({
+        autoclose: true,
+        format: 'dd/mm/yyyy',
+    });
+    $('#dateSuivi').datepicker('update', new Date());
+</script>
+
+<script>
+    $('#typePiece').select2();
+    $('#suivi_produit').select2();
+</script>
+<!-- /.modal -->

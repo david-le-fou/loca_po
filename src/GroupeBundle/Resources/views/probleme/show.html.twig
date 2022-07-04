@@ -1,0 +1,369 @@
+{% extends 'base.html.twig' %}
+
+{% block titre_page %} <strong class="text-danger">Détail du problème</strong>{% endblock %}
+{% block titre_description %}Détail du problème {{ probleme.numero }} <br>
+    Groupe <a href="{{ path('groupe_show', {'id' : probleme.groupe.id}) }}" class="text-danger"><b>{{ probleme.groupe.numero }}</b></a>
+{% endblock %}
+
+{% block body %}
+
+    {% set ETAT_SIGNALER = "Problème signalé" %}
+    {% set ETAT_PROPOSER = "Solution proposé" %}
+    {% set ETAT_RESOLUTION = "Résolution en cour" %}
+    {% set ETAT_RESOLU = "Problème résolu" %}
+    {% set ETAT_NON_RESOLU = "Problème non-résolu" %}
+
+    {% set couleur = '' %}
+    {% if probleme.etat == ETAT_SIGNALER %}
+        {% set couleur = 'warning' %}
+    {% endif %}
+    {% if probleme.etat == ETAT_PROPOSER %}
+        {% set couleur = 'primary' %}
+    {% endif %}
+    {% if probleme.etat == ETAT_RESOLUTION %}
+        {% set couleur = 'info' %}
+    {% endif %}
+    {% if probleme.etat == ETAT_RESOLU %}
+        {% set couleur = 'success' %}
+    {% endif %}
+    {% if probleme.etat == ETAT_NON_RESOLU %}
+        {% set couleur = 'danger' %}
+    {% endif %}
+
+{#    CALCUL DE LA DEPENSE#}
+    {% set totalDepense = 0 %}
+    {% for depense in probleme.depenses %}
+        {% set totalDepense = totalDepense + depense.montant %}
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="text-center text-{{ couleur }}"><b>Etat:</b> <strong>{{ probleme.etat }}</strong></h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title text-danger">Information du problème</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+
+                    {#                    <ul class="list-inline">#}
+                    {#                        <li>#}
+                    {#                            <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#modalDeplacementModifier"><i class="fa fa-edit"></i> Modifier</button>#}
+                    {#                        </li>#}
+                    {#                    </ul>#}
+                    <table class="table table-striped">
+                        <tbody>
+                        <tr>
+                            <th>Date de signalement:</th>
+                            <td>{% if probleme.dateSignalement %}{{ probleme.dateSignalement|date('d/m/Y') }}{% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Numero Groupe</th>
+                            <td><a href="{{ path('groupe_show', {'id' : probleme.groupe.id}) }}" target="_blank" ><b>{{ probleme.groupe.numero }} - {{ probleme.groupe.site.emplacement }}</b></a></td>
+                        </tr>
+                        <tr>
+                            <th>Cause:</th>
+                            <td>{{ probleme.cause }}</td>
+                        </tr>
+                        <tr>
+                            <th>Signaler par:</th>
+                            <td>
+                                {% if probleme.userCreer.urlImg %}
+                                    <img src="{{ asset('document/'~probleme.userCreer.urlImg) }}" class="img-circle img-thumbnail" alt="Image {{ probleme.userCreer.nom }}" width="35" height="35">
+                                {% endif %}
+                                {{ probleme.userCreer.nom }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Total dépense: </th>
+                            <td class="">
+                                <a href="#divDepense"><b>{{ totalDepense|number_format(2, ',', ' ') }}</b></a>
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <b>Description: </b>
+                                {{ probleme.description|nl2br }}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <hr>
+                    <div>
+                        {% if app.user == probleme.userCreer %}
+                            <ul class="list-inline">
+                                <li><button class="btn btn-default" type="button" data-toggle="modal" data-target="#modalProblemePhoto"><i class="fa fa-plus"></i> Ajouter une pièce jointe</button></li>
+                                <li>
+                                    <a href="{{ path('probleme_edit', {'id' : probleme.id}) }}" class="btn btn-primary"><i class="fa fa-edit"></i> Modifier</a>
+                                </li>
+                            </ul>
+
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title text-danger">Changement d'état</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <ul style="list-style: none" >
+                        <li><button class="btn-info btn btn-lg btn-block" data-toggle="modal" data-target="#modalEnCour"> En cour de résolution</button></li>
+                        <li><button class="btn-success btn btn-lg btn-block" data-toggle="modal" data-target="#modalResolu"> Problème résolu</button></li>
+                        <li><button class="btn-danger btn btn-lg btn-block" data-toggle="modal" data-target="#modalNonResolu"> Problème non-résolu</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row">
+        <div class="col-md-6">
+            {% if probleme.problemePhotos %}
+                <div class="row box" id="boxPieceProbleme">
+                    <div class="col-md-10">
+                        <h4>Image & Autre:</h4>
+                        <div class="row">
+                            {% for fichier in probleme.problemePhotos %}
+                                <div class="col-md-4">
+                                    {% if fichier.url|typeFile == 'image' %}
+                                        <a href="{{ asset('document/'~fichier.url) }}" target="_blank">
+                                            <img src="{{ asset('document/'~fichier.url) }}" alt="" class="img-thumbnail" >
+                                            <br>
+                                            <strong class="text-center">{{ fichier.nom }}</strong>
+                                        </a>
+
+                                    {% elseif fichier.url|typeFile == 'video' %}
+                                        <video controls>
+                                            <source src="{{ asset('document/'~fichier.url) }}" >
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    {% else %}
+                                        <a href="{{ asset('document/'~fichier.url) }}" target="_blank" >
+                                            <img src="{{ asset('images/file.png') }}" alt="" class="img-thumbnail" >
+                                            <br>
+                                            <strong class="text-center">{{ fichier.nom }}</strong>
+
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <!-- Chat box -->
+            <div class="box box-success">
+                <div class="box-header">
+                    <i class="fa fa-comments-o"></i>
+
+                    <h3 class="box-title text-primary">Solution proposé</h3>
+
+                    <div class="box-footer">
+                        {% if app.user|ifRole('ROLE_AJOUT_PBM') %}
+                            <form action="{{ path('probleme_ajouterSolution', {"id" : probleme.id}) }}" method="post" enctype="multipart/form-data">
+                                <div class="input-group">
+                                    <textarea class="form-control" name="solutionText" placeholder="Votre Solution..."></textarea>
+                                    Pièce jointe (photo, vidéo, ...)
+                                    <input type="file" name="solutionFile" class="form-control">
+
+                                    <div class="input-group-btn">
+                                        <button type="submit" class="btn btn-primary"><i class="fa fa-send"></i> Envoyer</button>
+                                    </div>
+                                </div>
+                                <hr>
+                            </form>
+                        {% endif %}
+                    </div>
+
+                </div>
+                <div class="box-body chat" id="chat-box">
+                    <!-- chat item -->
+                    {% if not probleme.ligneSolutions %}
+                        <h4 class="text-warning">Aucune solution proposé..</h4>
+                    {% else %}
+                        {% for solution in probleme.ligneSolutions|reverse %}
+                            <div class="item">
+                                {% if not solution.userSolution.urlImg %}
+                                    <img src="{{ asset('images/user.svg') }}" alt="user image" class="online">
+                                {% else %}
+                                    <img src="{{ asset('document/'~solution.userSolution.urlImg) }}" >
+
+                                {% endif %}
+
+                                <p class="message">
+                                    <a href="#" class="name">
+                                        <small class="text-muted pull-right"><i class="fa fa-clock-o"></i> {{ solution.date|date('d/m/Y à H:i') }}</small>
+                                        {{ solution.userSolution.nom }}
+                                    </a>
+                                    {{ solution.solution|nl2br }}
+                                </p>
+                                {% if solution.pieceJointe %}
+                                    <div class="attachment">
+                                        <h4 class="text-info">Attachments:</h4>
+
+                                        <p class="filename">
+                                            {% if solution.pieceJointe|typeFile == 'image' %}
+                                                <a href="{{ asset('document/'~solution.pieceJointe) }}" target="_blank">
+                                                    <img src="{{ asset('document/'~solution.pieceJointe) }}" alt="" class="img-thumbnail" width="100">
+                                                </a>
+
+                                            {% elseif solution.pieceJointe|typeFile == 'video' %}
+                                                <video width="300" height="200" controls>
+                                                    <source src="{{ asset('document/'~solution.pieceJointe) }}" >
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            {% else %}
+                                                <a href="{{ asset('document/'~solution.pieceJointe) }}" class="btn btn-default btn-facebook"><i class="fa fa-download"></i> Télécharger</a>
+                                            {% endif %}
+
+
+
+                                        </p>
+
+                                    </div>
+                                {% endif %}
+                                <hr>
+                                <!-- /.attachment -->
+                            </div>
+                            <!-- /.item -->
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- /.item -->
+                </div>
+                <!-- /.chat -->
+
+            </div>
+            <!-- /.box (chat box) -->
+        </div>
+
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-6" id="divDepense">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title text-danger">Comptabilité</h3>
+                    <h4>Total: <b>{{ totalDepense|number_format(2, ',', ' ') }} MGA</b></h4>
+
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+
+                    <ul class="list-inline">
+                        {% if app.user|ifRole('ROLE_COMPTA') %}
+                            <li>
+                                <button class="btn btn-danger" type="button" data-toggle="modal" data-target="#modalDepense"><i class="fa fa-dollar"></i> Ajouter une dépense</button>
+                            </li>
+                        {% endif %}
+                    </ul>
+
+                    <table class="table table-striped">
+                        {% for depense in probleme.depenses %}
+                            <tr>
+                                <td><a href="{{ depense.lien }}" target="_blank">• {{ depense.numero }}</a></td>
+                                <td class="text-right">{{ depense.montant|number_format(2, ',', ' ') }}</td>
+                                {% if app.user|ifRole('ROLE_COMPTA') %}
+                                <td><a href="{{ path('depense_delete', { "id" : depense.id }) }}" class="btn btn-default btn-xs btn-xs deleteDepense" ><i class="fa fa-minus-circle text-danger"></i></a></td>
+
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+{#        SCRIPT SUPRESSION DEPENSE#}
+        <script>
+            $('.deleteDepense').click(function(){
+                return confirm("Voulez-vous supprimer la dépense dans cette section?");
+            })
+        </script>
+
+
+        <div class="col-md-6">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title text-info">Chargée de mission</h3>
+
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+
+                    <ul class="list-inline">
+                        {% if app.user|ifRole('ROLE_MISSION') %}
+                            <li>
+                                <button class="btn btn-info" type="button" data-toggle="modal" data-target="#modalMission"><i class="fa fa-plus"></i> Ajouter une mission</button>
+                            </li>
+                        {% endif %}
+                    </ul>
+
+                    <table class="table table-striped">
+                        {% for key, mission in missions %}
+                            <tr>
+                                <td>
+                                    <a href="{{ path('mission_show', { 'id' : mission.id }) }}"><h4><i class="fa fa-info-circle"></i> Mission {{ key + 1 }}</h4></a>
+                                    • Date: <b>{{ mission.dateDebut|date('d/m/Y') }}</b> au <b>{{ mission.dateFin|date('d/m/Y') }}</b>
+                                    {% if mission.employeMissions %}
+                                        <br>
+                                        • Avec:
+                                        {% for employe in mission.employeMissions %}
+                                            <a href="{{ employe.lien }}" target="_blank">{{ employe.nom }}</a> ~
+                                        {% endfor %}
+                                    {% endif %}
+                                    <br>
+
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include '@Groupe/probleme/modalProblemePhoto.html.twig' %}
+
+    {% include '@Groupe/mission/modalMission.html.twig' %}
+
+    {% include '@Groupe/probleme/modalDepense.html.twig' %}
+
+    {% include '@Groupe/probleme/modalChangerEtat.html.twig' %}
+
+
+
+    <script>
+        // SLIMSCROLL FOR CHAT WIDGET
+        $('#chat-box').slimScroll({
+            height: '250px'
+        });
+
+        // SLIMSCROLL FOR CHAT WIDGET
+        $('#boxPieceProbleme').slimScroll({
+            height: '200px'
+        });
+    </script>
+
+{% endblock %}

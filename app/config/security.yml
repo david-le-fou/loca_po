@@ -1,0 +1,59 @@
+# To get started with security, check out the documentation:
+# https://symfony.com/doc/current/security.html
+# app/config/security.yml
+security:
+    encoders:
+        FOS\UserBundle\Model\UserInterface: bcrypt
+
+    role_hierarchy:
+        ROLE_AJOUT_PBM: ROLE_USER
+        ROLE_SOLUTION_PBM: ROLE_USER
+        ROLE_FINI_PBM: ROLE_USER
+        ROLE_GRP_DEPLACER: ROLE_USER
+        ROLE_VIDANGE: [ROLE_USER, ROLE_PIECE]
+        ROLE_PIECE: ROLE_USER
+        ROLE_ETAT_GRP: ROLE_USER
+        ROLE_GESTION_GROUPE: ROLE_USER
+        ROLE_MISSION: ROLE_USER
+        ROLE_HEURE_GROUPE: ROLE_USER
+        ROLE_RESP_GRP: [ROLE_AJOUT_PBM, ROLE_SOLUTION_PBM, ROLE_FINI_PBM, ROLE_GESTION_GROUPE, ROLE_GRP_DEPLACER, ROLE_VIDANGE, ROLE_PIECE, ROLE_ETAT_GRP, ROLE_MISSION, ROLE_GROUPE, ROLE_HEURE_GROUPE]
+
+        ROLE_PRODUIT: ROLE_USER
+        ROLE_GESTION_ENTRE: ROLE_USER
+        ROLE_GESTION_SORTIE: ROLE_USER
+        ROLE_GESTION_COMMANDE: ROLE_USER
+        ROLE_GESTION_EXPEDITION: ROLE_USER
+        ROLE_GESTION_DEPLACEMENT: ROLE_USER
+        ROLE_GESTION_IMMO: ROLE_USER
+        ROLE_SAI_DATE_ARRIVE: ROLE_USER
+        ROLE_HUILE: ROLE_USER
+        ROLE_RESP: [ROLE_GESTION_COMMANDE,ROLE_USER, ROLE_PRODUIT, ROLE_GESTION_ENTRE, ROLE_GESTION_SORTIE, ROLE_GESTION_DEPLACEMENT, ROLE_GESTION_IMMO, ROLE_HUILE, ROLE_GESTION_EXPEDITION, ROLE_SAI_DATE_ARRIVE]
+
+        ROLE_COMPTA: ROLE_USER
+
+        ROLE_ADMIN:       [ROLE_USER, ROLE_RESP, ROLE_PRODUIT, ROLE_AJOUT_PBM, ROLE_SOLUTION_PBM, ROLE_FINI_PBM, ROLE_GESTION_GROUPE, ROLE_GESTION_COMMANDE, ROLE_GESTION_ENTRE, ROLE_GESTION_SORTIE, ROLE_GESTION_DEPLACEMENT, ROLE_GRP_DEPLACER, ROLE_VIDANGE, ROLE_PIECE, ROLE_ETAT_GRP, ROLE_MISSION, ROLE_COMPTA, ROLE_GROUPE, ROLE_GESTION_IMMO, ROLE_HEURE_GROUPE, ROLE_HUILE, ROLE_GESTION_EXPEDITION, ROLE_SAI_DATE_ARRIVE]
+        ROLE_SUPER_ADMIN: ROLE_ADMIN
+
+    providers:
+        fos_userbundle:
+            id: fos_user.user_provider.username_email
+
+    firewalls:
+        main:
+            pattern: ^/
+            form_login:
+                provider: fos_userbundle
+                csrf_token_generator: security.csrf.token_manager
+
+            logout: true
+            anonymous: ~
+
+    access_control:
+    - { path: ^/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/gestion-groupe/date/historique/ajouter$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/api, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/login_ckeck$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/register, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
+    - { path: ^/admin/, role: ROLE_ADMIN }
+    - { path: ^/, role: ROLE_USER }

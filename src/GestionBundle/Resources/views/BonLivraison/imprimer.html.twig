@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bon de livraison</title>
+    <style>
+        div#bandeau {
+            width: 1000px;
+            height:350px;
+
+        }
+        div#contenu {
+            width:1000px;
+            height:auto;
+
+        }
+        div#piedpage {
+            width:1000px;
+            margin-top: 0px;
+
+        }
+        div#gauche {
+            float: left;
+            width:350px;
+            height:50px;
+
+        }
+        div#droit {
+            float: right;
+            width:700;
+            height:50px;
+
+        }
+        div#titre1 {
+            float: left;
+            width:500px;
+            height:150px;
+
+        }
+        div#titre2 {
+            float: right;
+            width:500px;
+            height:150px;
+
+        }
+        div#Scontenu {
+
+            width:920px;
+            height:auto;
+            margin-top:0px ;
+            margin-left: 30px;
+
+
+        }
+        img {
+
+
+            margin-left: 45px;
+            margin-top: 45px;
+
+        }
+        div#sgauche {
+            margin-left: 30px;
+        }
+        div#sdroit {
+
+            width:600px;
+            margin-top: 110px;
+        }
+        div#stitre1 {
+            border: 1px solid black;
+            width:400px;
+            margin-left: 30px;
+
+            font-style: italic;
+        }
+        p{
+            line-height: 0.5;
+
+        }
+
+        h2{
+            margin: 10px;
+        }
+        div#stitre2 {
+
+            margin-top: 50px;
+            margin-left: 20px;}
+
+        table {
+            border: 1px solid black;
+            border-collapse:collapse;
+            border-style:solid;
+            width:920px;
+            text-align: left;
+
+            margin: auto;
+        }
+        td{
+
+            padding-left:10px;
+        }
+        th{
+            text-align:center;white-space:nowrap
+        }
+        #footer {
+            border:0px;
+            width:920px;
+
+        }
+        td{
+            margin-right: 20px;
+            height:20px;
+
+        }
+        #piedtr{
+            border-bottom: 1px solid #7f7f7f;
+
+        }
+
+        li{padding-bottom:10px}
+
+    </style>
+</head>
+<body >
+
+<div id="bandeau">
+    <div id="gauche">
+        <br>
+        <img src="{{ asset('images/LocaPro.png') }}" width="250" height="100" alt="">
+        <div id="sgauche">
+            <p>28 , rue de la Poudrière Anjoma ,</p>
+            <p>Plle 23/25 Atsinanana</p>
+            <p>501 Toamasina</p>
+            <p>Tél. : 034 59 109 62</p>
+
+            <p>
+                infos.locapro@groupe-ibc.com
+            </p>
+            <p>
+                maintenance.locapro@groupe-ibc.com
+            </p>
+            <p>NIF 3003 300 382</p>
+            <p>STAT 77100 31 2019 0 00212</p>
+
+        </div>
+    </div>
+    <div id="droit">
+        <div id="sdroit">
+            <h2 style="display:inline">BON DE LIVRAISON <br></h2>
+
+
+            <ul style="list-style:none;display: inline-block;margin-left:-40px">
+                <li><b>N° {{ bonLivraison.numero }}</b></li>
+                <li>Destination: {{ bonLivraison.destination }}</li>
+                <li>Adressé à: {{ bonLivraison.agent }}</li>
+                <li>Poste: {{ bonLivraison.posteAgent }}</li>
+                <li>Numéro: {{ bonLivraison.contactAgent }}</li>
+
+                {% if bonLivraison.agent2 %}
+                    <li>---------------------</li>
+                    <li>Adressé à: {{ bonLivraison.agent2 }}</li>
+                    <li>Poste: {{ bonLivraison.posteAgent2 }}</li>
+                    <li>Numéro: {{ bonLivraison.contactAgent2 }}</li>
+                {% endif %}
+
+            </ul>
+           {# <ul style="list-style:none;display:inline;margin-right:230px;margin-top:-150px;float:right">
+                <li>Tél : {{ bonLivraison.contactAgent }}</li>
+
+
+            </ul>#}
+
+        </div>
+    </div>
+</div>
+<br><br><br><br><br><br>
+<div id="contenu">
+
+    <div id="Scontenu">
+        <table border="1">
+
+            <thead >
+
+            <th>Références</th>
+            <th width="50px" style="text-align: center">Quantité</th>
+            <th>Désignations</th>
+            </thead>
+
+            <tbody>
+
+            {% set nbrLigne = 0 %}
+            {% set totalQuantite = 0 %}
+            {% for ligne in bonLivraison.lignebonLivraisons %}
+                {% set nbrLigne = nbrLigne + 1 %}
+                {% set totalQuantite = totalQuantite + ligne.quantite %}
+                <tr>
+                    <td>{{ ligne.produit.reference }}</td>
+                    <td style="text-align: center">{{ ligne.quantite }}</td>
+                    <td>{{ ligne.designation }}</td>
+                </tr>
+            {% endfor %}
+
+            {% for i in nbrLigne..28 %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+
+            <tr>
+                <td   style="text-align:center">TOTAL</td  >
+                <td style="text-align: center">{{ totalQuantite }}</td>
+{#                <td colspan="2" style="text-align:center" >COUT D'EXPEDITION = {{ bonLivraison.coutTransport|number_format(2, ',', ' ') }} MGA</td>#}
+            </tr>
+
+
+            </tbody>
+
+        </table>
+        <br>
+
+    </div>
+
+
+</div>
+<div id="piedpage">
+    <table id="footer">
+
+        <tr>
+            <td>Le Fournisseur</td>
+            <td style="float:left;margin-left:125px">Le Magasinier</td>
+            <td style="float:left;margin-left:125px">Le Chauffeur</td>
+            <td style="float:right">Le Client</td>
+        </tr>
+
+    </table>
+</div>
+<br/> <br><br><br><br>
+<div style="margin-left:350px;">
+    <p style="font-style:italic;margin-left:10px">Merci d'en accuser réception et à nous retourner s'il vous plait</p>
+    <b style="">Les marchandises voyagent aux risques et périls du destinataire</b>
+</div>
+
+</body>
+</html>

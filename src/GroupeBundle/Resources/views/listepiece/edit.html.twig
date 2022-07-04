@@ -1,0 +1,150 @@
+{% extends 'base.html.twig' %}
+
+{% block titre_page %} <strong class="text-primary">Modification pièce</strong> {% endblock %}
+{% block titre_description %}Modification d'une pièce détaché{% endblock %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <form action="#" method="post">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-plus-circle"></i> Pièce détachée</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+
+                        {{ form_widget(edit_form) }}
+                        <br>
+                        <div class="row">
+                            <div class="col-md-6">
+                                
+                                    <div class="form-group">
+
+                                        <label for="groupe">Choix des groupes  <b class="text-danger" id="err_groupe"></b></label>
+                                        <select   class="form-control" name="groupe[]" id="groupe" multiple>
+                                            {% for key, groupe in groupes %}
+
+                                                <option value="{{ groupe.id }}"
+                                                      {% for val in listePiece.groupes  %}
+                                                      {% if val.id == groupe.id %}
+                                                       disabled
+                                                      {% endif %}
+                                                      {% endfor %}>
+                                                    {{ groupe.numero }} - {{ groupe.marque }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                <div class="form-group">
+
+                                    <label for="produit">Les produits compatibles:   <b class="text-danger" id="err_produit"></b></label>
+
+                                    <select  class="form-control" name="produit[]" id="produit" multiple>
+                                        {% for key, produit in produits %}
+
+                                            <option value="{{ produit.id }}"
+                                                    {% if listePiece.produit.id==produit.id%}
+                                                        disabled
+                                                    {% endif %}
+
+                                                    {% for val in listePiece.produits  %}
+                                                {% if val.id == produit.id %}
+                                                    disabled
+                                                {% endif %}
+                                                    {% endfor %}>
+                                                {{ produit.designation}} - {{ produit.reference }}</option>
+
+
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                            </div>
+                            <div class="col-md-6">
+                                <label for="groupe">Groupe(s) compatible <b class="text-danger" id="err_groupe"></b></label>
+
+                                <div class="card" >
+                                    <ul class="list-group list-group-flush">
+                                        {% for val in listePiece.groupes %}
+                                            <li class="list-group-item">{{ val.numero }} - {{ val.marque }}
+                                                <button style="display: inline-block" type="button" class="btn btn-xs btn-danger btnSupprimerLigne "  lien="{{ path('compatible_delete', {id:listePiece.id,idGroupe:val.id}) }}"><i class="fa fa-minus-circle "></i> Supprimer</button>
+                                            </li>
+
+                                        {% endfor %}
+
+
+                                    </ul>
+                                </div>
+                                <label for="produit">Référence equivalence <b class="text-danger" id="err_produit"></b></label>
+
+                                <div class="card" >
+                                    <ul class="list-group list-group-flush">
+                                        {% for val in listePiece.produits %}
+                                            <li class="list-group-item">{{ val.designation }} - {{ val.reference }}
+                                                <button style="display: inline-block" type="button" class="btn btn-xs btn-danger btnSupprimerLigne "  lien="{{ path('ref_delete', {id:val.id,idListPiece:val.reflistepiece.id}) }}"><i class="fa fa-minus-circle "></i> Supprimer</button>
+                                            </li>
+
+                                        {% endfor %}
+
+
+                                    </ul>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="submit" value="Modifier" class="btn btn-primary btn-block" />
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{{ path('listepiece_index') }}" class="btn btn-default btn-block">Annuler</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+
+                {{ form_end(edit_form) }}
+            </div>
+        </div>
+
+    </div>
+    {#MODALS SUPPRIMER LIGNE#}
+    <div class="modal modal-danger fade" id="modalSupprimerLigne">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Vérification</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Attention! Voulez-vous supprimer cette ligne?</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" id="lienSupprimerLigne" class="btn btn-outline"><i class="fa fa-minus-circle"></i> Supprimer</a>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Anuller</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+    <script>
+        $(document).ready(function() {
+            $('#groupe').select2();
+        });
+        $(document).ready(function() {
+            $('#produit').select2();
+        });
+        $('.btnSupprimerLigne').click(function () {
+            lien = $(this).attr('lien');
+            $('#lienSupprimerLigne').attr('href', lien);
+            $('#modalSupprimerLigne').modal();
+        });
+    </script>
+
+{% endblock %}

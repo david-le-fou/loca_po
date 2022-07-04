@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block titre_page %} <strong class="text-success">Nouvelle pièce</strong> {% endblock %}
+{% block titre_description %}Création d'une pièce détaché{% endblock %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box">
+                <form action="#" method="post">
+                    <div class="box-header with-border">
+                        <h3 class="box-title"><i class="fa fa-plus-circle"></i> Pièce détachée</h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+
+                        <div class="row">
+                            <div class="col-md-12">
+
+                                <div class="form-group">
+                                    <label for="ref">Référence <b class="text-danger" id="err_ref"></b></label>
+                                    <select required  class="form-control ref" name="ref" id="ref" >
+
+                                        <option value=""></option>
+
+                                        {% for produit in produits  %}
+                                            {% if not produit|ifProdInListePiece %}
+                                                <option value="{{ produit.id }}" >{{ produit.designation }} - {{ produit.reference }}</option>
+                                            {% else %}
+                                                <option value="{{ produit.id }}" disabled >{{ produit.designation }} - {{ produit.reference }}</option>
+                                            {% endif %}
+
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="nom">Nom du pièce <b class="text-danger" id="err_nom"></b></label>
+                                    <input type="text " name="nom" class="form-control" id="nom" value="">
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="row">
+                            <div class="col-md-6">
+                                <input type="submit" value="Créer" class="btn btn-success btn-block" />
+                            </div>
+                            <div class="col-md-6">
+                                <a href="{{ path('listepiece_index') }}" class="btn btn-default btn-block">Annuler</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+
+        $(document).ready(function() {
+
+                $(".ref").change(function(){
+                    var data = $(this).children("option:selected").text();
+                    $("#nom").val(data);
+                });
+
+            $('.ref').select2();
+        });
+
+    </script>
+
+{% endblock %}

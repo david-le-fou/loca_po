@@ -1,0 +1,179 @@
+{% extends 'base.html.twig' %}
+
+{% block titre %}Liste produit{% endblock %}
+{% block titre_page %}Produit{% endblock %}
+{% block titre_description %}<br>Liste des produits disponibles{% endblock %}
+{% block body %}
+
+    <ul class="list-inline">
+        {% if app.user|ifRole('ROLE_PRODUIT') %}
+            <li><a href="{{ path('produit_new') }}" class="btn btn-lg btn-success"><i class="fa fa-plus-circle"></i> Nouveau Produit</a></li>
+        {% endif %}
+    </ul>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Table liste produit</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <table class="table table-striped table-bordered" id="tableProduit">
+                        <thead>
+                        <tr>
+                            <th>Designation</th>
+                            <th>Code interne</th>
+                            <th>Réference</th>
+                            <th>Réf. equi.</th>
+                            <th>Prix d'achat</th>
+                            <th>Stock Dépot</th>
+                            <th>Stock Site</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for produit in produits %}
+                            {% set stockDepot = 0 %}
+                            {% set stockSite = 0 %}
+
+                            {% for depot in depots %}
+                                {% if depot|stockByDepot(produit) != '-' %}
+                                    {% set stockDepot = stockDepot + (depot|stockByDepot(produit)) %}
+                                {% endif %}
+                            {% endfor %}
+
+                            {% for site in sites %}
+                                {% if site|stockBySite(produit) != '-' %}
+                                    {% set stockSite = stockSite + (site|stockBySite(produit)) %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <tr>
+                                <td>{{ produit.designation }}</td>
+                                <td>
+                                    <a href="{{ path('produit_show', {'id' : produit.id}) }}">
+                                        {% if not produit.code %}
+                                            <i>Non-codé</i>
+                                        {% else %}
+                                        {{ produit.code }}
+                                        {% endif %}
+                                    </a>
+                                </td>
+                                <td>{{ produit.reference }}</td>
+                                <td>{{ produit.refEqui }}</td>
+                                <td class="text-right" style="white-space: nowrap;" >
+                                    {% if produit.prixAchat %}
+                                        {{ produit.prixAchat|number_format('2', ',', ' ') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-right">
+                                    {% if stockDepot < 0 %}
+                                        -
+                                    {% else %}
+                                        {{ stockDepot }}
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-right">
+                                    {% if stockSite < 0 %}
+                                        -
+                                    {% else %}
+                                        {{ stockSite }}
+                                    {% endif %}
+                                </td>
+
+
+                                <td>
+                                    {% set pathInfo = path('produit_show', {'id' : produit.id}) %}
+                                    {% set pathEdit = path('produit_edit', {'id' : produit.id}) %}
+
+                                    {% if produit.siHuile %}
+                                        {% set pathInfo = path('huile_show', {'id' : produit.id}) %}
+                                        {% set pathEdit = path('huile_edit', {'id' : produit.id}) %}
+                                    {% endif %}
+
+                                    <a href="{{ pathInfo }}" class="btn btn-xs btn-default" title="Afficher les informations et journal du produit"><i class="fa fa-info-circle"></i> Afficher</a>
+                                    {% if app.user|ifRole('ROLE_PRODUIT') %}
+                                        <a href="{{ pathEdit }}" class="btn btn-xs btn-primary"><i class="fa fa-edit"></i> Modifier</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- DataTables JS -->
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/jszip.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/buttons.html5.min.js') }}"></script>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet"  href="{{ asset('AdminLTE/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+    <link rel="stylesheet"  href="{{ asset('assets/DataTables/plugins/buttons.dataTables.min.css') }}">
+
+
+    <script>
+        $(document).ready(function() {
+
+            $('#tableProduit').DataTable({
+                scrollX: true,
+                scrollY: 350,
+                pageLength: 100,
+                language: {
+                    processing:     "Traitement en cours...",
+                    search:         "Rechercher&nbsp;:",
+                    lengthMenu:    "Afficher _MENU_ &eacute;l&eacute;ments",
+                    info:           "Affichage de l'&eacute;lement _START_ &agrave; _END_ sur _TOTAL_ &eacute;l&eacute;ments",
+                    infoEmpty:      "Affichage de l'&eacute;lement 0 &agrave; 0 sur 0 &eacute;l&eacute;ments",
+                    infoFiltered:   "(filtr&eacute; de _MAX_ &eacute;l&eacute;ments au total)",
+                    infoPostFix:    "",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords:    "Aucun &eacute;l&eacute;ment &agrave; afficher",
+                    emptyTable:     "Aucune donnée disponible dans le tableau",
+                    paginate: {
+                        first:      "Premier",
+                        previous:   "Pr&eacute;c&eacute;dent",
+                        next:       "Suivant",
+                        last:       "Dernier"
+                    },
+                    aria: {
+                        sortAscending:  ": activer pour trier la colonne par ordre croissant",
+                        sortDescending: ": activer pour trier la colonne par ordre décroissant"
+                    }
+                },
+                scrollCollapse: true,
+                fixedColumns:   {
+                    leftColumns: 1,
+                    rightColumns: 1
+                },
+                fixedHeader: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    'copyHtml5',
+                    'excelHtml5',
+                    'pdfHtml5'
+                ]
+
+
+            });
+
+
+        } );
+    </script>
+
+
+{% endblock %}

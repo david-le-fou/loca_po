@@ -1,0 +1,223 @@
+{% extends 'base.html.twig' %}
+
+
+{% block titre_page %} <strong class="text-primary">Tableau de résumé des vidange et filtre</strong>{% endblock %}
+{% block titre_description %}
+    Les informations sur les vidanges et filtres des groupe  <br>
+{% endblock %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Tableau de résumé</h3>
+
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <table id="tableResume" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>N° Groupe</th>
+                            <th>Site</th>
+                            <th>Heure de marche</th>
+                            <th>Etat</th>
+                            <th>Date Vidange</th>
+                            <th>Type Vidange</th>
+                            <th>Heure de marche Vidange</th>
+                            <th>Date F. Huile</th>
+                            <th>Ref. F. Huile</th>
+                            <th>Date F. Gasoil</th>
+                            <th>Ref. F. Gasoil</th>
+                            <th>Date F. Air</th>
+                            <th>Ref. F. Air</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        {% for liste in tables %}
+                            <tr>
+                                <td>{{ liste.groupe.numero }}</td>
+                                <td>{{ liste.groupe.site.emplacement }}</td>
+                                <td class="text-right">
+                                    {{ liste.groupe.heureMarche|affichageHm(liste.groupe.minuteMarche) }}
+                                </td>
+                                <td class="{{ 'text-'~liste.groupe.etatGroupe.couleur }}">
+                                    <strong class="hidden">{{ liste.groupe.etatGroupe.etat }}</strong>
+                                    <i class="fa fa-circle "></i> {{ liste.groupe.etatGroupe.etat }}
+                                </td>
+
+                                {% if liste.derniereVidange %}
+                                    <td>{{ liste.derniereVidange.date|date('d/m/Y') }}</td>
+                                    <td>{{ liste.derniereVidange.type }}</td>
+                                    <td>{{ liste.derniereVidange.heureMarche|number_format(0, ',', ' ') }}</td>
+                                {% else %}
+                                    <td>-</td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                {% endif %}
+
+
+                                {% if liste.filtreHuile %}
+                                        <td>{{ liste.filtreHuile.date|date('d/m/Y') }}</td>
+
+                                    {% if liste.filtreHuile.sortieEnStock %}
+                                        {% set produitPiece = liste.filtreHuile|produitBySuiviPiece %}
+                                        {% if produitPiece %}
+                                            <td>{{ produitPiece.reference }}</td>
+                                        {% else %}
+                                            {% if liste.filtreHuile.typePiece %}
+                                                <td>
+                                                    (Equiv.) {{ liste.filtreHuile.typePiece.produit.reference }}
+                                                </td>
+                                            {% else %}
+                                                <td>-</td>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if liste.filtreHuile.typePiece %}
+                                            <td>
+                                                (Equiv.) {{ liste.filtreHuile.typePiece.produit.reference }}
+                                            </td>
+                                        {% else %}
+                                            <td>-</td>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <td>-</td>
+                                    <td>-</td>
+                                {% endif %}
+
+
+                                {% if liste.filtreGasoil %}
+                                        <td>{{ liste.filtreGasoil.date|date('d/m/Y') }}</td>
+
+                                    {% if liste.filtreGasoil.sortieEnStock %}
+                                        {% set produitPiece = liste.filtreGasoil|produitBySuiviPiece %}
+                                        {% if produitPiece %}
+                                            <td>{{ produitPiece.reference }}</td>
+                                        {% else %}
+                                            {% if liste.filtreGasoil.typePiece %}
+                                                <td>
+                                                    (Equiv.) {{ liste.filtreGasoil.typePiece.produit.reference }}
+                                                </td>
+                                            {% else %}
+                                                <td>-</td>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if liste.filtreGasoil.typePiece %}
+                                            <td>
+                                                (Equiv.) {{ liste.filtreGasoil.typePiece.produit.reference }}
+                                            </td>
+                                        {% else %}
+                                            <td>-</td>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <td>-</td>
+                                    <td>-</td>
+                                {% endif %}
+
+
+                                {% if liste.filtreAir %}
+                                    <td>{{ liste.filtreAir.date|date('d/m/Y') }}</td>
+
+                                    {% if liste.filtreAir.sortieEnStock %}
+                                        {% set produitPiece = liste.filtreAir|produitBySuiviPiece %}
+                                        {% if produitPiece %}
+                                            <td>{{ produitPiece.reference }}</td>
+                                        {% else %}
+                                            {% if liste.filtreAir.typePiece %}
+                                                <td>
+                                                    (Equiv.) {{ liste.filtreAir.typePiece.produit.reference }}
+                                                </td>
+                                            {% else %}
+                                                <td>-</td>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if liste.filtreAir.typePiece %}
+                                            <td>
+                                                (Equiv.) {{ liste.filtreAir.typePiece.produit.reference }}
+                                            </td>
+                                        {% else %}
+                                            <td>-</td>
+                                        {% endif %}
+                                    {% endif %}
+
+
+                                {% else %}
+                                    <td>-</td>
+                                    <td>-</td>
+                                {% endif %}
+
+
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- DataTables JS -->
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/jszip.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/buttons.html5.min.js') }}"></script>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet"  href="{{ asset('AdminLTE/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+    <link rel="stylesheet"  href="{{ asset('assets/DataTables/plugins/buttons.dataTables.min.css') }}">
+
+    <script>
+        $(document).ready(function() {
+            $('#tableResume').DataTable({
+                scrollY: 350,
+                scrollX: true,
+                paging: false,
+                language: {
+                    processing:     "Traitement en cours...",
+                    search:         "Rechercher&nbsp;:",
+                    lengthMenu:    "Afficher _MENU_ &eacute;l&eacute;ments",
+                    info:           "Affichage de l'&eacute;lement _START_ &agrave; _END_ sur _TOTAL_ &eacute;l&eacute;ments",
+                    infoEmpty:      "Affichage de l'&eacute;lement 0 &agrave; 0 sur 0 &eacute;l&eacute;ments",
+                    infoFiltered:   "(filtr&eacute; de _MAX_ &eacute;l&eacute;ments au total)",
+                    infoPostFix:    "",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords:    "Aucun &eacute;l&eacute;ment &agrave; afficher",
+                    emptyTable:     "Aucune donnée disponible dans le tableau",
+                    paginate: {
+                        first:      "Premier",
+                        previous:   "Pr&eacute;c&eacute;dent",
+                        next:       "Suivant",
+                        last:       "Dernier"
+                    },
+                    aria: {
+                        sortAscending:  ": activer pour trier la colonne par ordre croissant",
+                        sortDescending: ": activer pour trier la colonne par ordre décroissant"
+                    }
+                },
+                scrollCollapse: true,
+                fixedHeader: true,
+
+                dom: 'Bfrtip',
+                buttons: [
+                    'copyHtml5',
+                    'excelHtml5',
+                    'pdfHtml5'
+                ]
+            });
+        } );
+    </script>
+
+
+
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends 'base.html.twig' %}
+
+
+{% block titre_page %} <strong class="text-primary">Tableau de résumé d'huile des vidange et appoint par mois</strong>
+    <br>{% endblock %}
+{% block titre_description %}
+    Les informations sur les vidanges et appoint des groupe  <br>
+    Mois de <b class="text-primary">{{ dateDebut|date('M Y') }}</b>
+{% endblock %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="list-inline">
+                <li><button class="btn btn-lg btn-primary" data-toggle="modal" data-target="#modalChoixDateStat"><i class="fa fa-calendar"></i> Choisir mois</button></li>
+            </ul>
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Tableau de résumé mois de <b class="text-primary">{{ dateDebut|date('M Y') }}</b></h3>
+
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <table id="tableResume" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>N° Groupe</th>
+                            <th>Site</th>
+                            <th>Etat</th>
+                            <th>H.M. total</th>
+                            <th>H.M. moyenne</th>
+                            <th>Nombre de jour</th>
+                            <th>Total huiles Vidange (l)</th>
+                            <th>Total huiles Appoint (l)</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        {% for liste in tables %}
+                            <tr>
+                                <td>{{ liste.groupe.numero }}</td>
+                                <td>{{ liste.groupe.site.emplacement }}</td>
+                                <td class="{{ 'text-'~liste.groupe.etatGroupe.couleur }}">
+                                    <strong class="hidden">{{ liste.groupe.etatGroupe.etat }}</strong>
+                                    <i class="fa fa-circle "></i> {{ liste.groupe.etatGroupe.etat }}
+                                </td>
+                                <td class="text-right">
+                                    {{ liste.heureMarche|affichageHm(liste.minuteMarche) }}
+                                </td>
+                                <td class="text-right">
+                                    <strong class="hide">{{ liste.moyenHeureMarche }}</strong>
+                                    {% if liste.moyenHeureMarche != '-' %}
+                                        {{ liste.moyenHeureMarche }} h
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ liste.nbJourMarche }} j
+                                </td>
+
+                                <td class="text-center">
+                                    {% if liste.huileVidange >= 0 %}
+                                        {{ liste.huileVidange }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if liste.huileAppoint >= 0 %}
+                                        {{ liste.huileAppoint }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalChoixDateStat">
+        <div class="modal-dialog" >
+            <div class="modal-content">
+
+                <form action="{{ path('stat_byDate_indexAppointVidange') }}" method="post">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title text-primary"><i class="fa fa-calendar"></i> Choisir date</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="moisStat">Mois: </label>
+                                    <select id="moisStat" name="moisStat" class="form-control"  required>
+                                        {% for i in 1..12 %}
+                                            {% if dateDebut|date('m') == i %}
+                                                <option value="{{ i }}" selected>{{ i }}</option>
+                                            {% else %}
+                                                <option value="{{ i }}" >{{ i }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="anneeStat">Année</label>
+                                    <select id="anneeStat" name="anneeStat" class="form-control"  required>
+                                        {% for i in 2017..2030 %}
+                                            {% if dateDebut|date('Y') == i %}
+                                                <option value="{{ i }}" selected>{{ i }}</option>
+                                            {% else %}
+                                                <option value="{{ i }}" >{{ i }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" >Afficher</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+                    </div>
+                </form>
+
+
+
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+
+
+    <!-- DataTables JS -->
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('AdminLTE/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/dataTables.buttons.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/jszip.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/pdfmake.min.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/vfs_fonts.js') }}"></script>
+    <script src="{{ asset('assets/DataTables/plugins/buttons.html5.min.js') }}"></script>
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet"  href="{{ asset('AdminLTE/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
+    <link rel="stylesheet"  href="{{ asset('assets/DataTables/plugins/buttons.dataTables.min.css') }}">
+
+    <script>
+        $(document).ready(function() {
+            $('#tableResume').DataTable({
+                scrollY: 350,
+                paging: false,
+                language: {
+                    processing:     "Traitement en cours...",
+                    search:         "Rechercher&nbsp;:",
+                    lengthMenu:    "Afficher _MENU_ &eacute;l&eacute;ments",
+                    info:           "Affichage de l'&eacute;lement _START_ &agrave; _END_ sur _TOTAL_ &eacute;l&eacute;ments",
+                    infoEmpty:      "Affichage de l'&eacute;lement 0 &agrave; 0 sur 0 &eacute;l&eacute;ments",
+                    infoFiltered:   "(filtr&eacute; de _MAX_ &eacute;l&eacute;ments au total)",
+                    infoPostFix:    "",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords:    "Aucun &eacute;l&eacute;ment &agrave; afficher",
+                    emptyTable:     "Aucune donnée disponible dans le tableau",
+                    paginate: {
+                        first:      "Premier",
+                        previous:   "Pr&eacute;c&eacute;dent",
+                        next:       "Suivant",
+                        last:       "Dernier"
+                    },
+                    aria: {
+                        sortAscending:  ": activer pour trier la colonne par ordre croissant",
+                        sortDescending: ": activer pour trier la colonne par ordre décroissant"
+                    }
+                },
+                scrollCollapse: true,
+                fixedHeader: true,
+
+                dom: 'Bfrtip',
+                buttons: [
+                    'copyHtml5',
+                    'excelHtml5',
+                    'pdfHtml5'
+                ]
+            });
+        } );
+    </script>
+
+
+
+{% endblock %}
